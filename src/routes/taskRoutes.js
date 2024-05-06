@@ -1,8 +1,9 @@
 const express = require("express");
 const taskRoutes = express.Router();
 const taskController = require("../controllers/taskController");
+const cacheMiddleware = require("../middlewares/cacheMiddleware")
 
-taskRoutes.get("/read", taskController.getAllTask);
+taskRoutes.get("/read", cacheMiddleware.getTasksFromRedis, taskController.getAllTask);
 
 taskRoutes.post("/add", taskController.addNewTask);
 

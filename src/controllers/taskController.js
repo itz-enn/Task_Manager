@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const client = require("../services/redis");
 
 exports.getAllTask = async (req, res) => {
   try {
@@ -11,12 +12,13 @@ exports.getAllTask = async (req, res) => {
         message: "No tasks found",
       });
     }
+
+    await client.setEx(res.locals.cacheKey, 600, JSON.stringify(isExist));
     return res.status(200).json({
-      status: true,
-      data: [isExist],
-      message: "All tasks retrieved successfully",
+      success: true,
+      data: isExist,
+      message: "All tasks retrieved successfully from db and stored in redis",
     });
-    
   } catch (err) {
     console.log(err);
   }
@@ -34,10 +36,12 @@ exports.addNewTask = async (req, res) => {
       });
 
       if (isExist) {
+        await client.del("allTasks");
+
         return res.status(200).json({
-          sucess: true,
-          data: [],
-          message: "Task created successfully",
+          success: true,
+          data: [isExist],
+          message: "Task created successfully and cache refreshed and ",
         });
       }
     }
@@ -47,6 +51,8 @@ exports.addNewTask = async (req, res) => {
       data: [],
       message: "unable to add new task",
     });
+
+    
   } catch (err) {
     console.log(err);
   }
@@ -64,10 +70,12 @@ exports.updateTask = async (req, res) => {
       });
 
       if (isExist) {
+        await client.del("allTasks");
+
         return res.status(200).json({
           sucess: true,
-          data: [],
-          message: "Task updated successfully",
+          data: [isExist],
+          message: "Task updated successfully and cache refreshed",
         });
       }
     }
@@ -85,26 +93,27 @@ exports.deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
     const isExist = await prisma.task.findUnique({
-      where: {id}
-    })
+      where: { id },
+    });
 
-   if (isExist === null) {
+    if (isExist === null) {
       return res.status(400).json({
         status: false,
         data: [],
         message: "Task not found",
-      });  
+      });
     }
-    
+
     await prisma.task.delete({
       where: { id },
     });
+    await client.del("allTasks");
+
     return res.status(200).json({
       status: true,
-      data: [],
-      message: "Task deleted successfully",
+      data: [isExist],
+      message: "Task deleted successfully and cache refreshed",
     });
-    
   } catch (err) {
     console.log(err);
   }
