@@ -13,7 +13,7 @@ exports.getAllTask = async (req, res) => {
       });
     }
 
-    await client.setEx(res.locals.cacheKey, 600, JSON.stringify(isExist));
+    await client.setEx(res.locals.cacheKey, process.env.EXPIRES_IN, JSON.stringify(isExist));
     return res.status(200).json({
       success: true,
       data: isExist,
@@ -36,7 +36,7 @@ exports.addNewTask = async (req, res) => {
       });
 
       if (isExist) {
-        await client.del("allTasks");
+        await client.del(process.env.CACHE_KEY);
 
         return res.status(200).json({
           success: true,
@@ -70,7 +70,7 @@ exports.updateTask = async (req, res) => {
       });
 
       if (isExist) {
-        await client.del("allTasks");
+        await client.del(process.env.CACHE_KEY);
 
         return res.status(200).json({
           sucess: true,
@@ -107,7 +107,7 @@ exports.deleteTask = async (req, res) => {
     await prisma.task.delete({
       where: { id },
     });
-    await client.del("allTasks");
+    await client.del(process.env.CACHE_KEY);
 
     return res.status(200).json({
       status: true,
