@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+  task-manager-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+  
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  # mysql:
+  #   image: mysql:latest
+  #   ports:
+  #     - 3306:3306
